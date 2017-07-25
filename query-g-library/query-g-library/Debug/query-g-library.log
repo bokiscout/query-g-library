@@ -1,0 +1,13 @@
+﻿  
+  D:\Documents_WD\GitHub\query-g-library\query-g-library\query-g-library>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile   -g   -DWIN32 -D_DEBUG -D_LIB -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o Debug\query-g-libraray.cu.obj "D:\Documents_WD\GitHub\query-g-library\query-g-library\query-g-library\query-g-libraray.cu" -clean 
+CUDACOMPILE : nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+  query-g-libraray.cu
+  Compiling CUDA source file query-g-libraray.cu...
+  
+  D:\Documents_WD\GitHub\query-g-library\query-g-library\query-g-library>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2015 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile -cudart static  -g   -DWIN32 -D_DEBUG -D_LIB -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o Debug\query-g-libraray.cu.obj "D:\Documents_WD\GitHub\query-g-library\query-g-library\query-g-library\query-g-libraray.cu" 
+D:/Documents_WD/GitHub/query-g-library/query-g-library/query-g-library/query-g-libraray.cu(13): warning : variable "id" was declared but never referenced
+D:/Documents_WD/GitHub/query-g-library/query-g-library/query-g-library/query-g-libraray.cu(13): warning : variable "id" was declared but never referenced
+CUDACOMPILE : nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+  query-g-libraray.cu
+  book.cpp
+  query-g-library.vcxproj -> D:\Documents_WD\GitHub\query-g-library\query-g-library\Debug\query-g-library.lib
