@@ -17,12 +17,15 @@ namespace qgl {
 
 			string get_title();
 			int get_author_id();
+			int get_invertar_id();
 
-//			int set_title(string new_title);
+			int set_title(string new_title);
 			int set_author_id(int new_id);
+			int set_invertar_id(int new_id);
 
 			string title;
 			int author_id;
+			int invertar_id;
 	
 	private:
 //		string title;

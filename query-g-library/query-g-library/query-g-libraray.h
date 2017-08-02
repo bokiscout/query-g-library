@@ -16,7 +16,7 @@ namespace qgl {
 		~QGLibraray();
 
 		Book *find_book_by_id(int id);
-		void increse_book_id(Book *book, int amount);
+		void increse_books_outhor_id(Book *book, int num_books, int amount);
 
 	private:
 
