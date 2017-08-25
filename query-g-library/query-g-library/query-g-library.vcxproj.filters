@@ -27,6 +27,9 @@
     <ClInclude Include="query-g-libraray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="author-book.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="query-g-libraray.cu">
@@ -35,6 +38,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="book.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Author.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="author-book.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

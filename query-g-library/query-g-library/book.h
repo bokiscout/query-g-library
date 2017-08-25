@@ -13,6 +13,11 @@ namespace qgl {
 	public:
 			Book();
 			~Book();
+
+			char title[50];
+			int author_id;
+			int invertar_id;
+
 			void print_details();
 
 			string get_title();
@@ -23,9 +28,7 @@ namespace qgl {
 			int set_author_id(int new_id);
 			int set_invertar_id(int new_id);
 
-			string title;
-			int author_id;
-			int invertar_id;
+
 	
 	private:
 //		string title;

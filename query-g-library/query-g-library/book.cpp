@@ -10,7 +10,7 @@ namespace qgl {
 
 		author_id = 0;
 		invertar_id = 0;
-		title = "Empty title";
+		strcpy(title, "Empty title");
 	}
 
 	Book::~Book() {
@@ -22,7 +22,7 @@ namespace qgl {
 		cout << "Invertar ID: " << invertar_id << endl;
 		cout << "Author ID: " << author_id << endl;
 		//cout << "Title: " << title << endl;
-		printf("Title: %s\n", title.c_str());
+		printf("Title: %s\n", title);
 	}
 
 	int Book::get_author_id() {
@@ -44,7 +44,7 @@ namespace qgl {
 	}
 
 	int Book::set_title(string new_title) {
-		title = new_title;
+		strcpy(title, new_title.c_str());
 
 		return 1;
 	}

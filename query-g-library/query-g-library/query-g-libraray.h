@@ -4,6 +4,7 @@
 #define QUERY_G_LIBRARAY
 #include <iostream>
 #include "book.h"
+#include "author.h"
 
 using namespace std;
 namespace qgl {
@@ -16,7 +17,10 @@ namespace qgl {
 		~QGLibraray();
 
 		Book *find_book_by_id(int id);
+
 		void increse_books_outhor_id(Book *book, int num_books, int amount);
+
+		void cartesian_product(Author *authors, int num_authors, Book *books, int num_books);
 
 	private:
 

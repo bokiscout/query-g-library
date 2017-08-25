@@ -140,6 +140,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="author-book.h" />
     <ClInclude Include="author.h" />
     <ClInclude Include="book.h" />
     <ClInclude Include="query-g-libraray.h" />
@@ -148,6 +149,8 @@
     <CudaCompile Include="query-g-libraray.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="author-book.cpp" />
+    <ClCompile Include="Author.cpp" />
     <ClCompile Include="book.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
