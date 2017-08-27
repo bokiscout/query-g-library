@@ -2,6 +2,15 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#include <math.h>
+
+#include <time.h>
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include "query-g-libraray.h"
 #include "book.h"
 #include "author.h"
@@ -67,6 +76,44 @@ namespace qgl {
 	QGLibraray::~QGLibraray() {
 	}
 
+	void QGLibraray::cartesian_product_cpu(Author *author_list, int num_authors, Book *books_list, int num_books) {
+		int i, j;
+		int current = 0;
+
+		AuthorBook *cartesian;
+		cartesian = new AuthorBook[num_authors * num_books];
+
+		// on windows this is wall time
+		// on linux this is cpu time
+		clock_t begin = clock();
+
+		for (i = 0; i < num_authors; i++)
+		{
+			for (j = 0; j < num_books; j++)
+			{
+
+				cartesian[current].author_author_id = author_list[i].author_id;
+
+				strcpy(cartesian[current].first_name, author_list[i].first_name);
+				strcpy(cartesian[current].last_name, author_list[i].last_name);
+
+				cartesian[current].book_author_id = books_list[j].author_id;
+				cartesian[current].invertar_br = books_list[j].invertar_id;
+				strcpy(cartesian[current].naslov, books_list[j].title);
+
+				current++;
+			}
+		}
+		clock_t end = clock();
+		double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+
+		printf("Kernel time: %.2f\n", time_spent);
+
+		//print_cartesian_cpu(cartesian, num_authors, num_books);
+
+		delete[]cartesian;
+	}
+
 	/* kernel to increase book's id by given ammount */
 	__global__ void increse_books_outhor_id_gpu(Book *books, int num_books, int ammount)
 	{
@@ -89,7 +136,7 @@ namespace qgl {
 	}
 
 	/* kernel to create cartesian product */
-	__global__ void cartesian_product_gpu(Author *d_input_authors, Book *d_input_books, AuthorBook *d_output_author_book, int num_authors, int num_books)
+	__global__ void cartesian_product_gpu(Author *d_input_authors, Book *d_input_books, AuthorBook *d_output_author_book, int num_authors, int num_books, int good_threads)
 	{
 		// blockIdx = numBlocks = gridSize [0, 5]
 		// blockDim = blockSize = 5
@@ -104,39 +151,87 @@ namespace qgl {
 		// 1 * 5 + 1 = 6
 		// ...
 		// 4 * 5 + 4 = 24
-		int idx = blockIdx.x * blockDim.x + threadIdx.x;
+		
+		int idx;			// thread idx
 
-		int pos_authors;
-		int pos_books;
+		int pos_authors;	// acces ith author acording to thread idx
+		int pos_books;		// acces ith book acording to thread idx
 
-		// larger of both get pos using mod
-		// smaller of both get pos using div
-		if (num_authors >= num_books) {
-			pos_authors = idx % num_authors;
-			pos_books = idx / num_authors;
+		idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+		if (idx > good_threads) {
+			//printf("[overflow] thread IDX: %d -> not executed\n", idx);
 		}
 		else {
-			pos_authors = idx / num_books;
-			pos_books = idx % num_books;
+			// larger of both get pos using mod
+			// smaller of both get pos using div
+			if (num_books >= num_authors) {
+				pos_books = idx % num_books;
+				pos_authors = idx / num_books;
+			}
+			else {
+				// num_authors > num_books
+				pos_authors = idx % num_books;		// might need to sweam num_books witk num_authors and vice versa couse of ilegals memory access
+				pos_books = idx / num_books;
+			}
+
+			//printf("IDX:%d, authors: %d, books:%d\n", idx, pos_authors, pos_books);
+
+			d_output_author_book[idx].author_author_id = d_input_authors[pos_authors].author_id;
+			d_output_author_book[idx].book_author_id = d_input_books[pos_books].author_id;
+			d_output_author_book[idx].invertar_br = d_input_books[pos_books].invertar_id;
+
+			my_strcpy(d_output_author_book[idx].first_name, d_input_authors[pos_authors].first_name);
+			my_strcpy(d_output_author_book[idx].last_name, d_input_authors[pos_authors].last_name);
+			my_strcpy(d_output_author_book[idx].naslov, d_input_books[pos_books].title);
 		}
 
-		printf("IDX:%d, authors: %d, books:%d\n", idx, pos_authors, pos_books);
+		/*
+		int it;
+		for (it = 1; it <= iteration; it++)
+		{
+			idx = (blockIdx.x * blockDim.x + threadIdx.x) * it;
 
-//		char new_fn[50] = "modified";
-//		my_strcpy(d_output_author_book[idx].first_name, new_fn);
+			
+			if (num_authors >= num_books) {
+				pos_authors = idx % num_authors;
+				pos_books = idx / num_authors;
+			}
+			else {
+				pos_authors = idx / num_books;
+				pos_books = idx % num_books;
+			}
 
-		d_output_author_book[idx].author_author_id = d_input_authors[pos_authors].author_id;
-		d_output_author_book[idx].book_author_id = d_input_books[pos_books].author_id;
-		d_output_author_book[idx].invertar_br = d_input_books[pos_books].invertar_id;
-		
-		my_strcpy(d_output_author_book[idx].first_name, d_input_authors[pos_authors].first_name);
-		my_strcpy(d_output_author_book[idx].last_name, d_input_authors[pos_authors].last_name);
-		my_strcpy(d_output_author_book[idx].naslov, d_input_books[pos_books].title);
+			if (it > 1) {
+				pos_books += (it - 1) * 1024;
+			}
+
+			if (! (pos_books > (num_books -1))) {
+				printf("IDX:%d, authors: %d, books:%d\n", idx, pos_authors, pos_books);
+
+				//		char new_fn[50] = "modified";
+				//		my_strcpy(d_output_author_book[idx].first_name, new_fn);
+
+				d_output_author_book[idx].author_author_id = d_input_authors[pos_authors].author_id;
+				d_output_author_book[idx].book_author_id = d_input_books[pos_books].author_id;
+				d_output_author_book[idx].invertar_br = d_input_books[pos_books].invertar_id;
+
+				my_strcpy(d_output_author_book[idx].first_name, d_input_authors[pos_authors].first_name);
+				my_strcpy(d_output_author_book[idx].last_name, d_input_authors[pos_authors].last_name);
+				my_strcpy(d_output_author_book[idx].naslov, d_input_books[pos_books].title);
+			}
+			else {
+				printf("[out of range] IDX:%d, authors: %d, books:%d\n", idx, pos_authors, pos_books);
+			}
+		}
+		*/
 	}
 
 	void QGLibraray::cartesian_product(Author *authors, int num_authors, Book *books, int num_books) {
-		printf("cartesian_product_in_libraray");
+		//printf("cartesian_product_in_libraray\n");
+
 		int i;
+		cudaError_t err;
 
 		// host
 		Author *h_input_authors;
@@ -160,46 +255,113 @@ namespace qgl {
 
 		// alocate memory on device
 		cudaMalloc(&d_input_authors, size_authors);
+
+		err = cudaGetLastError();
+		if (err != cudaSuccess) {
+			printf("\nError alocating d_input_authors: %s\n", cudaGetErrorString(err));
+		}
+
 		cudaMalloc(&d_input_books, size_books);
+		if (err != cudaSuccess) {
+			printf("\nError alocating d_input_books: %s\n", cudaGetErrorString(err));
+		}
+
 		cudaMalloc(&d_output, size_cartesian);
+		if (err != cudaSuccess) {
+			printf("\nError allocating d_output: %s\n", cudaGetErrorString(err));
+		}
 
 		// copy from device to host
 		cudaMemcpy(d_input_authors, h_input_authors, size_authors, cudaMemcpyHostToDevice);
-		cudaMemcpy(d_input_books, h_input_books, size_books, cudaMemcpyHostToDevice);
-		cudaMemcpy(d_output, h_output, size_cartesian, cudaMemcpyHostToDevice);
-
-		// define grid sise and block size
-		int gridSize = num_authors;		// num blocks
-		int blockSize = num_books;		// block size
-
-		// print output
-		printf("before cartesian\n");
-
-		for (i = 0; i < num_authors * num_books; i++) {
-			h_output[i].print_details();
-			printf("\n");
+		if (err != cudaSuccess) {
+			printf("\nError copying h_input_authors from host to device d_input_authors: %s\n", cudaGetErrorString(err));
 		}
 
+		cudaMemcpy(d_input_books, h_input_books, size_books, cudaMemcpyHostToDevice);
+		if (err != cudaSuccess) {
+			printf("\nError copying h_input_books from host to device d_input_books: %s\n", cudaGetErrorString(err));
+		}
+
+		cudaMemcpy(d_output, h_output, size_cartesian, cudaMemcpyHostToDevice);
+		if (err != cudaSuccess) {
+			printf("\nError copying h_output from host to device d_output: %s\n", cudaGetErrorString(err));
+		}
+
+		// define grid sise and block size
+		int n = num_authors * num_books;
+
+		int blockSize = 1024;			            // block size // multiple of 32 -> threads per block
+		int gridSize = ceil ((float)n / (float)blockSize);		// number of blocks, each containing blockSize threads
+		
+		printf("\nThreads [needed]:   %d\n", num_books * num_authors);
+		printf("Threads [executed]: %d\n", gridSize * blockSize);
+
+		printf("\nGrid Size: %d\n", gridSize);
+		printf("Block Size: %d\n", blockSize);
+
+		printf("\nMemory for output: %d bytes\n", size_cartesian);
+		
+//		if (num_books <= 1024) {
+//			blockSize = num_books;
+//		}
+//		else {
+//			blockSize = 1024;
+//		}
+		
+
+		// print output
+//		printf("before cartesian\n");
+//
+//		for (i = 0; i < num_authors * num_books; i++) {
+//			printf("%d\n", i);
+//			h_output[i].print_details();
+//			printf("\n");
+//		}
+
 		// execute kernel
-		cartesian_product_gpu << <gridSize, blockSize >> >(d_input_authors, d_input_books, d_output, num_authors, num_books);
+		clock_t begin = clock();
+
+		cartesian_product_gpu << <gridSize, blockSize >> >(d_input_authors, d_input_books, d_output, num_authors, num_books, num_authors * num_books);
+		cudaDeviceSynchronize();
+
+		clock_t end = clock();
+		double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+		printf("\nKernel time: %.2f\n", time_spent);
+
+		err = cudaGetLastError();
+		if (err != cudaSuccess) {
+			printf("\nKernel failed: %s\n", cudaGetErrorString(err));
+		}
+		else {
+			//printf("\nKernel Sucess!!!\n");
+		}
 
 		// copy from device to host
 		cudaMemcpy(h_output, d_output, size_cartesian, cudaMemcpyDeviceToHost);
-
-		// print output
-		printf("after cartesian\n");
-
-		for (i = 0; i < num_authors * num_books; i++) {
-			h_output[i].print_details();
-			printf("\n");
+		if (err != cudaSuccess) {
+			printf("\nError copying d_output from device to host h_output: %s\n", cudaGetErrorString(err));
 		}
 
-		// free memory
-		delete[] h_output;
+		// print output
+		//printf("after cartesian\n");
 
+		//printf("Print result:\n");
+		//printf("Enter amount of result data to be printed: ");
+		//int dammy;
+		//scanf("%d", &dammy);
+
+		//for (i = 0; i < dammy; i++) {
+		//	printf("%d\n", i);
+		//	h_output[i].print_details();
+		//	printf("\n");
+		//}
+
+		// free memory
 		cudaFree(d_input_authors);
 		cudaFree(d_input_books);
 		cudaFree(d_output);
+
+		delete[] h_output;
 	}
 
 	void QGLibraray::increse_books_outhor_id(Book *books, int num_books, int amount) {
@@ -223,7 +385,7 @@ namespace qgl {
 
 		// define block size and threads per block
 		int blockSize = 128;
-		int gridSize = ceil(num_books / (float)blockSize );
+		int gridSize = ceil(num_books / (float)blockSize);
 
 
 #ifdef DEBUG
