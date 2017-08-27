@@ -20,7 +20,8 @@ namespace qgl {
 
 		void increse_books_outhor_id(Book *book, int num_books, int amount);
 
-		void cartesian_product(Author *authors, int num_authors, Book *books, int num_books);
+		void cartesian_product	  (Author *authors, int num_authors, Book *books, int num_books);
+		void cartesian_product_cpu(Author *authors, int num_authors, Book *books, int num_books);
 
 	private:
 
