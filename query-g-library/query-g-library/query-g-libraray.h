@@ -18,10 +18,14 @@ namespace qgl {
 
 		Book *find_book_by_id(int id);
 
-		void increse_books_outhor_id(Book *book, int num_books, int amount);
+		void increse_books_outhor_id    (Book *book, unsigned long num_books, int amount);
+		void increse_books_outhor_id_cpu(Book *book, unsigned long num_books, int amount);
 
-		void cartesian_product	  (Author *authors, int num_authors, Book *books, int num_books);
-		void cartesian_product_cpu(Author *authors, int num_authors, Book *books, int num_books);
+		void agregate_sum_cpu(Book* books, unsigned long num_books);
+		void agregate_sum(Book* books, unsigned long num_books);
+
+		void cartesian_product	  (Author *authors, unsigned long num_authors, Book *books, unsigned long num_books);
+		void cartesian_product_cpu(Author *authors, unsigned long num_authors, Book *books, unsigned long num_books);
 
 	private:
 
